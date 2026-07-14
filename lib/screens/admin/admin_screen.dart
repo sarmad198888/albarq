@@ -11,6 +11,7 @@ import 'pages/assigned_orders_page.dart';
 import 'pages/drivers_page.dart';
 import '../../shared/widgets/dashboard_card.dart';
 import '../../core/services/driver_service.dart';
+import 'pending_drivers_screen.dart';
 
 enum AdminView {
   pending,
@@ -52,6 +53,19 @@ class _AdminScreenState extends State<AdminScreen> {
     );
   },
 ),
+IconButton(
+  icon: const Icon(Icons.person_add_alt_1),
+  tooltip: "طلبات المندوبين",
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PendingDriversScreen(),
+      ),
+    );
+  },
+),
+
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: "تسجيل الخروج",

@@ -25,6 +25,12 @@ class AuthService {
     if (result.docs.isEmpty) {
       return null;
     }
+    final data = result.docs.first.data();
+
+if (data['role'] == 'driver' &&
+    (data['approved'] ?? false) == false) {
+  throw Exception("بانتظار موافقة الإدارة");
+}
 
     final user = UserModel.fromMap(
       result.docs.first.id,

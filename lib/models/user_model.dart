@@ -5,6 +5,7 @@ class UserModel {
   final String password;
   final String role;
   final bool active;
+  final bool approved;
 
   const UserModel({
     required this.id,
@@ -13,19 +14,21 @@ class UserModel {
     required this.password,
     required this.role,
     required this.active,
+    required this.approved,
   });
 
   factory UserModel.fromMap(
-    String id,
-    Map<String, dynamic> data,
-  ) {
-    return UserModel(
-      id: id,
-      name: data['name'] ?? '',
-      username: data['username'] ?? '',
-      password: data['password'] ?? '',
-      role: data['role'] ?? '',
-      active: data['active'] ?? false,
-    );
-  }
+  String id,
+  Map<String, dynamic> data,
+) {
+  return UserModel(
+    id: id,
+    name: data['name'] ?? '',
+    username: data['username'] ?? '',
+    password: data['password'] ?? '',
+    role: data['role'] ?? '',
+    active: data['active'] ?? false,
+    approved: data['approved'] ?? true,
+  );
+}
 }

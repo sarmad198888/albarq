@@ -21,11 +21,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _loading = false;
 
-  Future<void> _login() async {
-    setState(() {
-      _loading = true;
-    });
 
+Future<void> _login() async {
+  setState(() {
+    _loading = true;
+  });
+
+  try {
     final user = await _authService.login(
       username: _usernameController.text.trim(),
       password: _passwordController.text.trim(),
@@ -62,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
         break;
 
       case "driver":
-        screen =  DriverScreen();
+        screen = DriverScreen();
         break;
 
       default:
@@ -80,7 +82,20 @@ class _LoginScreenState extends State<LoginScreen> {
         builder: (_) => screen,
       ),
     );
+  } catch (e) {
+    if (!mounted) return;
+
+    setState(() {
+      _loading = false;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(e.toString().replaceFirst("Exception: ", "")),
+      ),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {

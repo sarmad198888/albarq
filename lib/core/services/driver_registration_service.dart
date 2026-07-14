@@ -29,13 +29,14 @@ class DriverRegistrationService {
         _firestore.collection("users").doc();
 
     await userRef.set({
-      "username": username,
-      "password": password,
-      "role": "driver",
-      "active": true,
-      "name": name,
-      "phone": phone,
-    });
+  "username": username,
+  "password": password,
+  "role": "driver",
+  "active": true,
+  "approved": false,
+  "name": name,
+  "phone": phone,
+});
 
     // إنشاء بيانات المندوب
     final driverRef =
