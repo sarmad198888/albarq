@@ -1,0 +1,82 @@
+{
+  "project_info": {
+    "project_number": "2274315162",
+    "project_id": "albarq-tikret",
+    "storage_bucket": "albarq-tikret.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:2274315162:android:6f2f3908b9a8091be9c823",
+        "android_client_info": {
+          "package_name": "com.barq.delivery"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "2274315162-m7fnobhd6dgjgel6colddhu642fh6r06.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBhYhoY078jKLdpuLyICR4ZjEbOiutO4w0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "2274315162-m7fnobhd6dgjgel6colddhu642fh6r06.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "2274315162-f4cljdm40ic339ose4heaa7nlgassqo2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.barq.delivery"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:2274315162:android:709112e3c283709ee9c823",
+        "android_client_info": {
+          "package_name": "com.example.albarq"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "2274315162-m7fnobhd6dgjgel6colddhu642fh6r06.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBhYhoY078jKLdpuLyICR4ZjEbOiutO4w0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "2274315162-m7fnobhd6dgjgel6colddhu642fh6r06.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "2274315162-f4cljdm40ic339ose4heaa7nlgassqo2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.barq.delivery"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

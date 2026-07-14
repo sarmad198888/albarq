@@ -72,7 +72,7 @@ class WelcomeScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const RestaurantScreen(),
+                          builder: (context) => RestaurantScreen(),
                         ),
                       );
                     },

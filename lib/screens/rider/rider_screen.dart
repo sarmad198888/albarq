@@ -42,7 +42,7 @@ class RiderScreen extends StatelessWidget {
 
       SizedBox(height: 25),
 
-      const CurrentOrderCard(),
+      CurrentOrderCard(),
 
     ],
   ),

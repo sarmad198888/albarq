@@ -59,17 +59,17 @@ class HomeScreen extends StatelessWidget {
     children: const [
 
       SearchBarWidget(),
-      const SizedBox(height: 20),
+      SizedBox(height: 20),
 
-const BannerWidget(),
+BannerWidget(),
 
-const SizedBox(height: 25),
-const SizedBox(height: 20),
+SizedBox(height: 25),
+SizedBox(height: 20),
 
-const CategoriesWidget(),
-const SizedBox(height: 30),
+CategoriesWidget(),
+SizedBox(height: 30),
 
-const Text(
+Text(
   "أشهر المطاعم",
   style: TextStyle(
     fontSize: 22,
@@ -77,9 +77,9 @@ const Text(
   ),
 ),
 
-const SizedBox(height: 15),
+SizedBox(height: 15),
 
-const RestaurantCard(
+RestaurantCard(
   name: "برجر هاوس",
   image: "assets/images/burger.jpg",
   delivery: "1000 د.ع",
@@ -87,7 +87,7 @@ const RestaurantCard(
   rating: 4.8,
 ),
 
-const RestaurantCard(
+RestaurantCard(
   name: "بيتزا روما",
   image: "assets/images/pizza.jpg",
   delivery: "مجاني",
@@ -96,7 +96,7 @@ const RestaurantCard(
 ),
 
 
-const SizedBox(height: 25),
+SizedBox(height: 25),
 
       SizedBox(height: 25),
 

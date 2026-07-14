@@ -1,0 +1,39 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "albarq-tikret",
+          "appId": "1:2274315162:android:709112e3c283709ee9c823",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "albarq-tikret",
+          "configurations": {
+            "android": "1:2274315162:android:709112e3c283709ee9c823",
+            "ios": "1:2274315162:ios:117aa1c72deb9aaee9c823",
+            "macos": "1:2274315162:ios:117aa1c72deb9aaee9c823",
+            "web": "1:2274315162:web:478002b16092107ce9c823",
+            "windows": "1:2274315162:web:3de75de07372d896e9c823"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "disallowLegacyRuntimeConfig": true,
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ]
+}

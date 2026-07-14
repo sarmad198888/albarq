@@ -13,6 +13,11 @@ class AppTheme {
     colorScheme: ColorScheme.fromSeed(
       seedColor: AppColors.primary,
     ),
+    cardTheme: const CardThemeData(
+  color: Color.fromARGB(35, 130, 128, 127), // غيّر هذا اللون إلى أي لون تريده
+  surfaceTintColor: Colors.transparent,
+  elevation: 3,
+),
 
     fontFamily: "Cairo",
 

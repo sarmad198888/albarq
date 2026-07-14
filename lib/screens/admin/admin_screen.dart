@@ -1,192 +1,202 @@
 import 'package:flutter/material.dart';
 
-class AdminScreen extends StatelessWidget {
+import '../../core/services/admin_service.dart';
+import '../../core/services/auth_service.dart';
+import '../../core/services/order_service.dart';
+import '../../models/order_model.dart';
+import '../auth/login_screen.dart';
+import 'completed_orders_screen.dart';
+import 'pages/pending_orders_page.dart';
+import 'pages/assigned_orders_page.dart';
+import 'pages/drivers_page.dart';
+import '../../shared/widgets/dashboard_card.dart';
+import '../../core/services/driver_service.dart';
+
+enum AdminView {
+  pending,
+  assigned,
+  drivers,
+}
+class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
+
+  @override
+  State<AdminScreen> createState() => _AdminScreenState();
+}
+
+class _AdminScreenState extends State<AdminScreen> {
+
+  AdminView currentView = AdminView.pending;
+
+  final OrderService orderService = OrderService();
+  final AuthService authService = AuthService();
+  final AdminService adminService = AdminService();
+  final DriverService driverService = DriverService();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffF7F7F7),
-
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: false,
-        title: const Text(
-          "لوحة الإدارة",
-          style: TextStyle(
-            color: Colors.red,
-            fontWeight: FontWeight.bold,
-            fontSize: 28,
+        title: const Text("لوحة الإدارة"),
+        centerTitle: true,
+        actions: [
+          IconButton(
+  icon: const Icon(Icons.history),
+  tooltip: "الطلبات المكتملة",
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CompletedOrdersScreen(),
+      ),
+    );
+  },
+),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: "تسجيل الخروج",
+            onPressed: () async {
+              await authService.logout();
+
+              if (context.mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const LoginScreen(),
+                  ),
+                  (route) => false,
+                );
+              }
+            },
           ),
-        ),
+        ],
       ),
 
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: const [
+      body: Column(
+        children: [
 
-          OrderCard(),
+          /// بطاقات الإحصائيات
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
 
-          SizedBox(height: 20),
+                Expanded(
+                  child: _buildCounterCard(
+                    "طلبات جديدة",
+                    adminService.getPendingOrders(),
+                    Colors.orange,
+                  ),
+                ),
 
-          OrderCard(),
+                const SizedBox(width: 10),
 
-          SizedBox(height: 20),
+                Expanded(
+                  child: _buildCounterCard(
+                    "قيد التوصيل",
+                    adminService.getAssignedOrders(),
+                    Colors.blue,
+                  ),
+                ),
 
-          OrderCard(),
+                const SizedBox(width: 10),
 
+                Expanded(
+  child: StreamBuilder<int>(
+    stream: adminService.getActiveDriversCount(),
+    builder: (context, snapshot) {
+      final count = snapshot.data ?? 0;
+
+      return DashboardCard(
+        title: "مندوبون",
+        value: "$count",
+        color: Colors.green,
+        icon: Icons.delivery_dining,
+        onTap: () {
+  setState(() {
+    currentView = AdminView.drivers;
+  });
+},
+      );
+    },
+  ),
+),
+
+                
+
+              ],
+            ),
+          ),
+
+          /// قائمة الطلبات
+          Expanded(
+  child: Builder(
+    builder: (_) {
+      switch (currentView) {
+        case AdminView.pending:
+          return const PendingOrdersPage();
+
+        case AdminView.assigned:
+          return const AssignedOrdersPage();
+
+        case AdminView.drivers:
+          return const DriversPage();
+      }
+    },
+  ),
+),
         ],
       ),
     );
   }
+
+ Widget _buildCounterCard(
+  String title,
+  Stream<List<OrderModel>> stream,
+  Color color,
+) {
+  return StreamBuilder<List<OrderModel>>(
+    stream: stream,
+    builder: (context, snapshot) {
+
+      final count = snapshot.data?.length ?? 0;
+
+    return DashboardCard(
+  title: title,
+  value: "$count",
+  color: color,
+  icon: _getCardIcon(title),
+  onTap: () {
+    setState(() {
+      if (title == "طلبات جديدة") {
+        currentView = AdminView.pending;
+      } else if (title == "قيد التوصيل") {
+        currentView = AdminView.assigned;
+      } else if (title == "مندوبون") {
+        currentView = AdminView.drivers;
+      }
+    });
+  },
+);
+    },
+  );
 }
+IconData _getCardIcon(String title) {
+  switch (title) {
+    case "طلبات جديدة":
+      return Icons.receipt_long;
 
-class OrderCard extends StatelessWidget {
-  const OrderCard({super.key});
+    case "قيد التوصيل":
+      return Icons.delivery_dining;
 
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    case "مكتملة":
+      return Icons.check_circle;
 
-            const Text(
-              "طلب جديد",
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+    case "مندوبون":
+      return Icons.delivery_dining;
 
-            const SizedBox(height: 20),
-
-            Row(
-              children: const [
-
-                Icon(Icons.store, color: Colors.red),
-
-                SizedBox(width: 10),
-
-                Text(
-                  "برجر هاوس",
-                  style: TextStyle(fontSize: 18),
-                ),
-
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            Row(
-              children: const [
-
-                Icon(Icons.person, color: Colors.blue),
-
-                SizedBox(width: 10),
-
-                Text(
-                  "أحمد علي",
-                  style: TextStyle(fontSize: 18),
-                ),
-
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            Row(
-              children: const [
-
-                Icon(Icons.phone,color: Colors.green),
-
-                SizedBox(width:10),
-
-                Text(
-                  "07701234567",
-                  style: TextStyle(fontSize:18),
-                ),
-
-              ],
-            ),
-
-            const SizedBox(height:12),
-
-            Row(
-              children: const [
-
-                Icon(Icons.payments,color: Colors.orange),
-
-                SizedBox(width:10),
-
-                Text(
-                  "18000 د.ع",
-                  style: TextStyle(fontSize:18),
-                ),
-
-              ],
-            ),
-
-            const SizedBox(height:12),
-
-            Row(
-              children: const [
-
-                Icon(Icons.location_on,color: Colors.red),
-
-                SizedBox(width:10),
-
-                Expanded(
-                  child: Text(
-                    "تكريت - القادسية",
-                    style: TextStyle(fontSize:18),
-                  ),
-                ),
-
-              ],
-            ),
-
-            const SizedBox(height:25),
-
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton.icon(
-
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                ),
-
-                onPressed: () {},
-
-                icon: const Icon(
-                  Icons.delivery_dining,
-                  color: Colors.white,
-                ),
-
-                label: const Text(
-                  "إسناد لمندوب",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize:18,
-                  ),
-                ),
-              ),
-            ),
-
-          ],
-        ),
-      ),
-    );
+    default:
+      return Icons.dashboard;
   }
+}
 }

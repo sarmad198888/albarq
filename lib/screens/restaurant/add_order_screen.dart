@@ -19,6 +19,8 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
   bool loading = false;
 
   Future<void> saveOrder() async {
+    print("SAVE ORDER PRESSED");
+    
     setState(() {
       loading = true;
     });
@@ -29,8 +31,8 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
       customerName: _customerName.text,
       customerPhone: _customerPhone.text,
       customerAddress: _customerAddress.text,
-      totalPrice: double.tryParse(_totalPrice.text) ?? 0,
-      deliveryPrice: double.tryParse(_deliveryPrice.text) ?? 0,
+      totalPrice: int.tryParse(_totalPrice.text) ?? 0,
+      deliveryPrice: int.tryParse(_deliveryPrice.text) ?? 0,
       notes: _notes.text,
     );
 
