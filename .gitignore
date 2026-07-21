@@ -43,3 +43,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+# Node.js
+node_modules/
+**/node_modules/
+
+# Firebase Functions
+notifications/node_modules/
