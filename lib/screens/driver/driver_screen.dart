@@ -68,6 +68,12 @@ class _DriverScreenState extends State<DriverScreen> {
 
 if (driverId == null) return;
 
+// تحديث حالة المندوب
+await driverService.updateDriverStatus(
+  driverId: driverId,
+  status: "online",
+);
+
 // إضافة المندوب إلى الطابور
 await driverService.joinQueue(driverId);
 
@@ -82,20 +88,34 @@ await locationService.updateDriverLocation(driverId);
   }
 
   Future<void> _logout() async {
-    _locationTimer?.cancel();
+  _locationTimer?.cancel();
 
-    await authService.logout();
+  final userId = await sessionService.getUserId();
 
-    if (!mounted) return;
+  if (userId != null) {
+    final driverId =
+        await driverService.getDriverDocumentId(userId);
 
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const LoginScreen(),
-      ),
-      (route) => false,
-    );
+    if (driverId != null) {
+      await driverService.updateDriverStatus(
+        driverId: driverId,
+        status: "offline",
+      );
+    }
   }
+
+  await authService.logout();
+
+  if (!mounted) return;
+
+  Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const LoginScreen(),
+    ),
+    (route) => false,
+  );
+}
   List<OrderModel> _filteredOrders(List<OrderModel> orders) {
   switch (currentView) {
     case DriverView.pending:

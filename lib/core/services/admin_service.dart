@@ -21,7 +21,7 @@ Stream<int> getDriverCurrentOrders(String driverId) {
   return _firestore
       .collection('orders')
       .where('driverId', isEqualTo: driverId)
-      .where('status', isEqualTo: 'assigned')
+      .where('status', isEqualTo: 'delivering')
       .snapshots()
       .map((snapshot) => snapshot.docs.length);
 }
@@ -57,16 +57,20 @@ Stream<DocumentSnapshot<Map<String, dynamic>>> getDriver(
 
   /// الطلبات قيد التوصيل
   Stream<List<OrderModel>> getAssignedOrders() {
-    return _firestore
-        .collection('orders')
-        .where('status', isEqualTo: 'assigned')
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((e) => OrderModel.fromFirestore(e))
-              .toList(),
-        );
-  }
+  return _firestore
+      .collection('orders')
+      .snapshots()
+      .map((snapshot) {
+        return snapshot.docs
+            .map((e) => OrderModel.fromFirestore(e))
+            .where(
+              (order) =>
+                  order.status == 'assigned' ||
+                  order.status == 'delivering',
+            )
+            .toList();
+      });
+}
 
   /// الطلبات المكتملة
   Stream<List<OrderModel>> getCompletedOrders() {

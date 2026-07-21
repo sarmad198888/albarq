@@ -27,7 +27,9 @@ class AuthService {
     }
     final data = result.docs.first.data();
 
-if (data['role'] == 'driver' &&
+final requiresApproval = ['driver', 'merchant'];
+
+if (requiresApproval.contains(data['role']) &&
     (data['approved'] ?? false) == false) {
   throw Exception("بانتظار موافقة الإدارة");
 }

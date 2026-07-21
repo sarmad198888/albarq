@@ -2,7 +2,7 @@ name: albarq
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: ^3.12.2
@@ -11,6 +11,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+    
     
 
   cupertino_icons: ^1.0.8
@@ -54,3 +55,14 @@ flutter:
     - assets/images/banner.jpg
     - assets/images/burger.jpg
     - assets/images/pizza.jpg
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+
+  image_path: "assets/icon/foreground.png"
+
+  adaptive_icon_foreground: "assets/icon/foreground.png"
+  adaptive_icon_background: "assets/icon/background.png"
+
+  min_sdk_android: 21

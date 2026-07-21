@@ -1,9 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/order_model.dart';
 import 'driver_service.dart';
+import 'auth_service.dart';
+import 'merchant_service.dart';
 
 class OrderService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore =
+      FirebaseFirestore.instance;
+
+  final AuthService _authService =
+      AuthService();
+
+  final MerchantService _merchantService =
+      MerchantService();
 
   /// إنشاء طلب جديد
   Future<void> createOrder({
@@ -17,6 +26,14 @@ class OrderService {
   String restaurantName = "برجر هاوس",
 }) async {
 
+  print("CREATE ORDER START");
+
+
+final currentUser =
+    await _authService.getCurrentUser();
+
+final merchant =
+    await _merchantService.getMerchant();
   final orderRef =
       _firestore.collection('orders').doc();
 
@@ -27,30 +44,101 @@ class OrderService {
     'totalPrice': totalPrice,
     'deliveryPrice': deliveryPrice,
     'notes': notes,
-    'restaurantId': restaurantId,
-    'restaurantName': restaurantName,
+    'restaurantId':
+    currentUser?.id ?? restaurantId,
+
+    'restaurantName':
+    merchant?['businessName'] ??
+        restaurantName,
     'driverId': '',
     'driverName': '',
     'status': 'pending',
     'createdAt': FieldValue.serverTimestamp(),
   });
 
-  // التعيين التلقائي
+}
+Future<void> startDriverResponseTimer({
+  required String orderId,
+  required String driverId,
+}) async {
+
+  print("TIMER STARTED FOR $orderId");
+
+  await Future.delayed(const Duration(seconds: 30));
+
+  print("30 SECONDS FINISHED");
+
+  final orderRef =
+      _firestore.collection('orders').doc(orderId);
+
+  final driverRef =
+      _firestore.collection('drivers').doc(driverId);
+
+  final orderDoc = await orderRef.get();
+
+  if (!orderDoc.exists) return;
+
+  final data = orderDoc.data()!;
+
+  print("ORDER STATUS = ${data['status']}");
+
+  // إذا وافق المندوب فلا نفعل شيئاً
+  if (data['status'] != 'assigned') {
+    return;
+  }
+
+  // تحرير المندوب
+  await driverRef.update({
+    'currentOrderId': '',
+  });
+
+  // إعادة الطلب إلى حالة انتظار
+  await orderRef.update({
+    'driverId': '',
+    'driverName': '',
+    'status': 'pending',
+  });
+
+  // إعادة توزيعه على مندوب آخر
+  // await reAssignOrder(orderId);
+}
+
+Future<void> reAssignOrder(String orderId) async {
+
+  print("===== REASSIGN =====");
+
   final driverService = DriverService();
 
   final driver = await driverService.getNextDriver();
 
-  if (driver != null) {
+  print("NEXT DRIVER = ${driver?.name}");
 
-    await driverService.assignOrder(
-      driverId: driver.id,
-      driverName: driver.name,
-      orderId: orderRef.id,
-    );
+  if (driver == null) {
 
-    await driverService.moveDriverToEnd(driver.id);
+    await _firestore
+        .collection('orders')
+        .doc(orderId)
+        .update({
+      'status': 'pending',
+      'driverId': '',
+      'driverName': '',
+    });
 
+    return;
   }
+
+  await driverService.assignOrder(
+    driverId: driver.id,
+    driverName: driver.name,
+    orderId: orderId,
+  );
+
+  await startDriverResponseTimer(
+    orderId: orderId,
+    driverId: driver.id,
+  );
+
+  await driverService.moveDriverToEnd(driver.id);
 }
 
   /// جميع الطلبات
@@ -119,13 +207,17 @@ if (driver != null) {
       'driverName': driverName,
       'status': 'assigned',
     });
+    print("ASSIGN DRIVER CALLED");
+    print("orderId = $orderId");
+    print("driverId = $driverId");
   }
 
   /// إنهاء الطلب
   Future<void> completeOrder(String orderId) async {
     await _firestore.collection('orders').doc(orderId).update({
-      'status': 'completed',
-    });
+  'status': 'completed',
+  'completedAt': FieldValue.serverTimestamp(),
+});
   }
 
   /// إلغاء الطلب
@@ -149,9 +241,10 @@ Stream<List<OrderModel>> getDriverOrders(String driverId) {
 }
 /// قبول الطلب
 Future<void> acceptOrder(String orderId) async {
-  await _firestore.collection('orders').doc(orderId).update({
-    'status': 'delivering',
-  });
+ await _firestore.collection('orders').doc(orderId).update({
+  'status': 'delivering',
+  'deliveryStartedAt': FieldValue.serverTimestamp(),
+});
 }
 
 /// رفض الطلب
@@ -177,14 +270,14 @@ Future<void> rejectOrder(String orderId) async {
 
   // تحرير المندوب
   if (driverId.isNotEmpty) {
-    batch.update(
-      _firestore.collection('drivers').doc(driverId),
-      {
-        'currentOrderId': '',
-      },
-    );
-  }
-
+  batch.update(
+    _firestore.collection('drivers').doc(driverId),
+    {
+      'currentOrderId': '',
+      'rejectedToday': FieldValue.increment(1),
+    },
+  );
+}
   await batch.commit();
 
   // إعادة توزيع الطلب مباشرة
@@ -242,5 +335,28 @@ async {
     print(s);
     print("=============================");
   }
+}
+Stream<List<OrderModel>> getRestaurantOrders(
+  String restaurantId,
+) {
+  return _firestore
+      .collection('orders')
+      .where(
+        'restaurantId',
+        isEqualTo: restaurantId,
+      )
+      .orderBy(
+        'createdAt',
+        descending: true,
+      )
+      .snapshots()
+      .map((snapshot) {
+        return snapshot.docs
+            .map(
+              (doc) =>
+                  OrderModel.fromFirestore(doc),
+            )
+            .toList();
+      });
 }
 }

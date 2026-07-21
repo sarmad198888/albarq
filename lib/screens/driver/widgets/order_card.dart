@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 import '../../../models/order_model.dart';
+import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class OrderCard extends StatelessWidget {
   final OrderModel order;
@@ -16,8 +18,28 @@ class OrderCard extends StatelessWidget {
   this.onAccept,
   this.onReject,
 });
+
+Future<void> _callCustomer() async {
+  final uri = Uri(
+    scheme: 'tel',
+    path: order.customerPhone,
+  );
+
+  await launchUrl(uri);
+}
+String formatDateTime(Timestamp? timestamp) {
+  if (timestamp == null) return "-";
+
+  return DateFormat(
+
+    "dd/MM/yyyy • hh:mm a",
+    
+  ).format(timestamp.toDate());
+}
+
   @override
   Widget build(BuildContext context) {
+    print("STATUS = ${order.status}");
     return Card(
       margin: const EdgeInsets.symmetric(
         horizontal: 12,
@@ -99,6 +121,34 @@ class OrderCard extends StatelessWidget {
               ],
             ),
 
+const SizedBox(height: 8),
+
+Text(
+  "📅 إنشاء الطلب: ${formatDateTime(order.createdAt)}",
+  style: const TextStyle(
+    fontSize: 13,
+    color: Colors.grey,
+  ),
+),
+
+if (order.acceptedAt != null)
+  Text(
+    "🚚 بدأ التوصيل: ${formatDateTime(order.acceptedAt)}",
+    style: const TextStyle(
+      fontSize: 13,
+      color: Colors.blue,
+    ),
+  ),
+
+if (order.completedAt != null)
+  Text(
+    "✅ اكتمل الطلب: ${formatDateTime(order.completedAt)}",
+    style: const TextStyle(
+      fontSize: 13,
+      color: Colors.green,
+    ),
+  ),
+
             const SizedBox(height: 15),
 
             if (order.status == "assigned")
@@ -132,21 +182,45 @@ class OrderCard extends StatelessWidget {
     ],
   )
 else if (order.status == "delivering")
-  SizedBox(
-    width: double.infinity,
-    height: 48,
-    child: ElevatedButton.icon(
-      onPressed: onCompleted,
-      icon: const Icon(Icons.check_circle),
-      label: const Text(
-        "تم تسليم الطلب",
-        style: TextStyle(fontSize: 16),
+  Column(
+    children: [
+
+      SizedBox(
+        width: double.infinity,
+        height: 48,
+        child: ElevatedButton.icon(
+          onPressed: _callCustomer,
+          icon: const Icon(Icons.phone),
+          label: const Text(
+            "اتصال بالزبون",
+            style: TextStyle(fontSize: 16),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue,
+            foregroundColor: Colors.white,
+          ),
+        ),
       ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
+
+      const SizedBox(height: 10),
+
+      SizedBox(
+        width: double.infinity,
+        height: 48,
+        child: ElevatedButton.icon(
+          onPressed: onCompleted,
+          icon: const Icon(Icons.check_circle),
+          label: const Text(
+            "تم تسليم الطلب",
+            style: TextStyle(fontSize: 16),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green,
+            foregroundColor: Colors.white,
+          ),
+        ),
       ),
-    ),
+    ],
   ),
 
           ],

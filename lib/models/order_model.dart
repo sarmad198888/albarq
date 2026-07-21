@@ -19,8 +19,11 @@ class OrderModel {
 
   final String driverId;
   final String driverName;
+  final String driverPhone;
 
   final Timestamp? createdAt;
+  final Timestamp? acceptedAt;
+  final Timestamp? completedAt;
 
   const OrderModel({
     required this.id,
@@ -35,7 +38,10 @@ class OrderModel {
     required this.status,
     required this.driverId,
     required this.driverName,
+    required this.driverPhone,
     required this.createdAt,
+             this.acceptedAt,
+             this.completedAt,
   });
 
   factory OrderModel.fromFirestore(
@@ -68,7 +74,11 @@ class OrderModel {
 
       driverName: data['driverName'] ?? '',
 
-      createdAt: data['createdAt'],
+      driverPhone: data['driverPhone'] ?? '',
+
+     createdAt: data['createdAt'],
+     acceptedAt: data['acceptedAt'],
+     completedAt: data['completedAt'],
     );
   }
 
@@ -85,7 +95,10 @@ class OrderModel {
       'status': status,
       'driverId': driverId,
       'driverName': driverName,
+      'driverPhone': driverPhone,
       'createdAt': createdAt,
+      'acceptedAt': acceptedAt,
+      'completedAt': completedAt,
     };
   }
 }

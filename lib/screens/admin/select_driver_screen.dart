@@ -115,21 +115,73 @@ class SelectDriverScreen extends StatelessWidget {
 
                                 const SizedBox(width: 6),
 
-                                Text(
-                                  busy
-                                      ? "مشغول بتوصيل طلب"
-                                      : "متاح",
-                                  style: TextStyle(
-                                    color: busy
-                                        ? Colors.red
-                                        : Colors.green,
-                                    fontWeight:
-                                        FontWeight.bold,
-                                  ),
-                                ),
+StreamBuilder<int>(
+  stream: driverService.getDeliveringOrders(driver.id),
+  builder: (context, deliveringSnapshot) {
 
+    final delivering =
+        deliveringSnapshot.data ?? 0;
+
+    return StreamBuilder<int>(
+      stream:
+          driverService.getPendingOrders(driver.id),
+      builder: (context, pendingSnapshot) {
+
+        final pending =
+            pendingSnapshot.data ?? 0;
+
+        return Column(
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
+          children: [
+
+            if (!driver.active)
+              const Text(
+                "غير متصل",
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+            if (driver.active &&
+                delivering == 0 &&
+                pending == 0)
+              const Text(
+                "متاح",
+                style: TextStyle(
+                  color: Colors.green,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+            if (delivering > 0)
+              Text(
+                "🔴 يوصل طلب ($delivering)",
+                style: const TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+            if (pending > 0)
+              Text(
+                "🟠 بانتظار الموافقة ($pending)",
+                style: const TextStyle(
+                  color: Colors.orange,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  },
+),
                               ],
                             ),
+                            const SizedBox(height: 4),
+
 
                           ],
                         ),

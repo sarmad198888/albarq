@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-
+import '../merchant/merchant_screen.dart';
 import '../../core/services/auth_service.dart';
 import '../admin/admin_screen.dart';
 import '../driver/driver_screen.dart';
 import '../restaurant/restaurant_screen.dart';
 import 'register_driver_screen.dart';
+import 'register_merchant_screen.dart';
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -62,6 +64,10 @@ Future<void> _login() async {
       case "restaurant":
         screen = RestaurantScreen();
         break;
+
+case "merchant":
+  screen = const RestaurantScreen();
+  break;
 
       case "driver":
         screen = DriverScreen();
@@ -178,6 +184,24 @@ TextButton(
   },
   child: const Text(
     "إنشاء حساب مندوب جديد",
+    style: TextStyle(
+      fontSize: 16,
+      fontWeight: FontWeight.bold,
+    ),
+  ),
+),
+
+TextButton(
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const RegisterMerchantScreen(),
+      ),
+    );
+  },
+  child: const Text(
+    "إنشاء حساب شريك جديد",
     style: TextStyle(
       fontSize: 16,
       fontWeight: FontWeight.bold,

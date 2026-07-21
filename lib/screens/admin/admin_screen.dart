@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'approval_requests_screen.dart';
 import '../../core/services/admin_service.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/order_service.dart';
@@ -11,7 +11,8 @@ import 'pages/assigned_orders_page.dart';
 import 'pages/drivers_page.dart';
 import '../../shared/widgets/dashboard_card.dart';
 import '../../core/services/driver_service.dart';
-import 'pending_drivers_screen.dart';
+import '../../core/services/approval_service.dart';
+import '../../shared/widgets/notification_badge.dart';
 
 enum AdminView {
   pending,
@@ -33,6 +34,8 @@ class _AdminScreenState extends State<AdminScreen> {
   final AuthService authService = AuthService();
   final AdminService adminService = AdminService();
   final DriverService driverService = DriverService();
+  final ApprovalService approvalService =
+    ApprovalService();
 
   @override
   Widget build(BuildContext context) {
@@ -53,36 +56,49 @@ class _AdminScreenState extends State<AdminScreen> {
     );
   },
 ),
+
+          StreamBuilder<int>(
+  stream: approvalService.getPendingApprovalsCount(),
+  
+  builder: (context, snapshot) {
+
+  final count = snapshot.data ?? 0;
+
+  return NotificationBadge(
+    count: count,
+    child: IconButton(
+      icon: const Icon(Icons.person_add_alt_1),
+      tooltip: "طلبات التسجيل",
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) =>
+                const ApprovalRequestsScreen(),
+          ),
+        );
+      },
+    ),
+  );
+},
+),
 IconButton(
-  icon: const Icon(Icons.person_add_alt_1),
-  tooltip: "طلبات المندوبين",
-  onPressed: () {
-    Navigator.push(
+  icon: const Icon(Icons.logout),
+  tooltip: "تسجيل الخروج",
+  onPressed: () async {
+    await authService.logout();
+
+    if (!context.mounted) return;
+
+    Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
-        builder: (_) => PendingDriversScreen(),
+        builder: (_) => const LoginScreen(),
       ),
+      (route) => false,
     );
   },
 ),
-
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: "تسجيل الخروج",
-            onPressed: () async {
-              await authService.logout();
-
-              if (context.mounted) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const LoginScreen(),
-                  ),
-                  (route) => false,
-                );
-              }
-            },
-          ),
         ],
       ),
 
@@ -135,8 +151,6 @@ IconButton(
     },
   ),
 ),
-
-                
 
               ],
             ),

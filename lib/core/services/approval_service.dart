@@ -46,4 +46,30 @@ class ApprovalService {
         .doc(userId)
         .delete();
   }
+
+/// عدد جميع الطلبات المعلقة (مندوبين + شركاء)
+Stream<int> getPendingApprovalsCount() {
+  return _firestore
+      .collection("users")
+      .snapshots()
+      .map((snapshot) {
+
+    int count = 0;
+
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+
+      final role = data["role"];
+      final approved = data["approved"] ?? true;
+
+      if ((role == "driver" || role == "merchant") &&
+          approved == false) {
+        count++;
+      }
+    }
+
+    return count;
+  });
+}
+
 }

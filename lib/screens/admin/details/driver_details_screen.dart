@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/services/admin_service.dart';
 
 class DriverDetailsScreen extends StatelessWidget {
@@ -10,6 +10,15 @@ class DriverDetailsScreen extends StatelessWidget {
     super.key,
     required this.driverId,
   });
+
+  Future<void> _callDriver(String phone) async {
+  final uri = Uri.parse("tel:$phone");
+
+  await launchUrl(
+    uri,
+    mode: LaunchMode.externalApplication,
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -33,15 +42,11 @@ final AdminService adminService = AdminService();
       );
     }
 
-    final data = snapshot.data!.data();
+    final data = snapshot.data!.data()!;
+    final int assignedToday = data['assignedToday'] ?? 0;
+    final int completedToday = data['completedToday'] ?? 0;
+    final int rejectedToday = data['rejectedToday'] ?? 0;
 
-    if (data == null) {
-      return const Scaffold(
-        body: Center(
-          child: Text("المندوب غير موجود"),
-        ),
-      );
-    }
 
     final name = data['name'] ?? '';
     final phone = data['phone'] ?? '';
@@ -101,6 +106,83 @@ final AdminService adminService = AdminService();
             ),
           ),
 
+Row(
+  children: [
+
+    Expanded(
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            children: [
+              const Icon(Icons.assignment, color: Colors.blue),
+              const SizedBox(height: 8),
+              const Text("طلبات اليوم"),
+              Text(
+                "$assignedToday",
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+
+    const SizedBox(width: 10),
+
+    Expanded(
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.green),
+              const SizedBox(height: 8),
+              const Text("مكتملة"),
+              Text(
+                "$completedToday",
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+
+    const SizedBox(width: 10),
+
+    Expanded(
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            children: [
+              const Icon(Icons.cancel, color: Colors.red),
+              const SizedBox(height: 8),
+              const Text("مرفوضة"),
+              Text(
+                "$rejectedToday",
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+
+  ],
+),
+
+const SizedBox(height: 20),
           const SizedBox(height: 20),
 
           Card(
@@ -147,13 +229,14 @@ final AdminService adminService = AdminService();
 
           const SizedBox(height: 10),
 
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.call),
-              title: const Text("اتصال بالمندوب"),
-              trailing: const Icon(Icons.phone),
-            ),
-          ),
+         Card(
+  child: ListTile(
+    leading: const Icon(Icons.call),
+    title: const Text("اتصال بالمندوب"),
+    trailing: const Icon(Icons.phone),
+    onTap: () => _callDriver(phone),
+  ),
+),
         ],
       ),
    );

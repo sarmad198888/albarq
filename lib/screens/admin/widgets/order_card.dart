@@ -5,6 +5,8 @@ import '../pages/order_details_screen.dart';
 import '../select_driver_screen.dart';
 import '../../../core/services/driver_service.dart';
 import '../../../core/services/notification_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 class OrderCard extends StatelessWidget {
   final OrderModel order;
@@ -51,7 +53,13 @@ final DriverService driverService = DriverService();
         return order.status;
     }
   }
+String formatDateTime(Timestamp? timestamp) {
+  if (timestamp == null) return "";
 
+  return DateFormat(
+    "dd/MM/yyyy   hh:mm a",
+  ).format(timestamp.toDate());
+}
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -134,6 +142,26 @@ final DriverService driverService = DriverService();
             ],
 
             const SizedBox(height: 15),
+
+Text(
+  "📅 إنشاء الطلب: ${formatDateTime(order.createdAt)}",
+  style: const TextStyle(
+    fontSize: 13,
+    color: Colors.grey,
+  ),
+),
+
+if (order.completedAt != null)
+  Text(
+    "✅ اكتمال الطلب: ${formatDateTime(order.completedAt)}",
+    style: const TextStyle(
+      fontSize: 13,
+      color: Colors.green,
+    ),
+  ),
+
+const SizedBox(height: 12),
+
 
             Row(
               children: [

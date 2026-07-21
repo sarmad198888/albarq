@@ -12,6 +12,8 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'dart:async';
 import 'widgets/current_time_widget.dart';
 import 'package:albarq/screens/restaurant/add_order_screen.dart';
+import '../../core/services/merchant_service.dart';
+
 
 enum RestaurantView {
   pending,
@@ -36,10 +38,25 @@ class _RestaurantScreenState
 
   final OrderService orderService = OrderService();
   final AuthService authService = AuthService();
+  final MerchantService merchantService =
+    MerchantService();
+    Map<String, dynamic>? merchantData;
+    
 
+Future<void> loadMerchant() async {
+  merchantData =
+      await merchantService.getMerchant();
+      print(merchantData);
 
-
-
+  if (mounted) {
+    setState(() {});
+  }
+}
+@override
+void initState() {
+  super.initState();
+  loadMerchant();
+}
 
   Future<void> _logout(BuildContext context) async {
     await authService.logout();
@@ -57,6 +74,13 @@ class _RestaurantScreenState
 
   @override
   Widget build(BuildContext context) {
+    if (merchantData == null) {
+  return const Scaffold(
+    body: Center(
+      child: CircularProgressIndicator(),
+    ),
+  );
+}
     return Scaffold(
   
       floatingActionButton: FloatingActionButton.extended(
@@ -72,7 +96,9 @@ class _RestaurantScreenState
         label: const Text("إضافة طلب"),
       ),
       body: StreamBuilder<List<OrderModel>>(
-  stream: orderService.getOrders(),
+  stream: orderService.getRestaurantOrders(
+  merchantData?["userId"] ?? "",
+),
   builder: (context, snapshot) {
 
     if (snapshot.connectionState ==
@@ -94,7 +120,9 @@ class _RestaurantScreenState
         orders.where((o) => o.status == "pending").length;
 
     final assignedCount =
-        orders.where((o) => o.status == "assigned").length;
+    orders.where((o) =>
+        o.status == "assigned" ||
+        o.status == "delivering").length;
 
     final completedCount =
         orders.where((o) => o.status == "completed").length;
@@ -151,7 +179,7 @@ const SizedBox(height: 10),
   ),
   child: Row(
     mainAxisSize: MainAxisSize.min,
-    children: const [
+    children: [
 
       Text(
         "🍔",
@@ -161,7 +189,7 @@ const SizedBox(height: 10),
       SizedBox(width: 10),
 
       Text(
-        "برجر هاوس",
+         merchantData?["businessName"] ?? "جاري التحميل...",
         style: TextStyle(
           color: Color.fromARGB(255, 60, 70, 34),
           fontSize: 30,
@@ -252,7 +280,9 @@ Row(
 
     Expanded(
       child: StreamBuilder<List<OrderModel>>(
-        stream: orderService.getOrders(),
+       stream: orderService.getRestaurantOrders(
+  merchantData?["userId"] ?? "",
+),
         builder: (context, snapshot) {
           if (snapshot.connectionState ==
               ConnectionState.waiting) {
@@ -272,7 +302,9 @@ Row(
                orders.where((o) => o.status == "pending").length;
 
           final assignedCount =
-                orders.where((o) => o.status == "assigned").length;
+    orders.where((o) =>
+        o.status == "assigned" ||
+        o.status == "delivering").length;
 
           final completedCount =
                 orders.where((o) => o.status == "completed").length;
@@ -319,10 +351,12 @@ Row(
           .toList();
 
     case RestaurantView.assigned:
-      return orders
-          .where((o) => o.status == "assigned")
-          .toList();
-
+  return orders
+      .where((o) =>
+          o.status == "assigned" ||
+          o.status == "delivering")
+      .toList();
+      
     case RestaurantView.completed:
       return orders
           .where((o) => o.status == "completed")

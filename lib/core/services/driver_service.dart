@@ -5,6 +5,39 @@ import '../../models/driver_model.dart';
 class DriverService {
   final FirebaseFirestore _firestore =
       FirebaseFirestore.instance;
+     Stream<int> getDriverCurrentOrders(String driverId) {
+  return FirebaseFirestore.instance
+      .collection('orders')
+      .where('driverId', isEqualTo: driverId)
+      .where('status', isEqualTo: 'delivering')
+      .snapshots()
+      .map((snapshot) => snapshot.docs.length);
+}
+Stream<int> getDriverPendingOrders(String driverId) {
+  return FirebaseFirestore.instance
+      .collection('orders')
+      .where('driverId', isEqualTo: driverId)
+      .where('status', isEqualTo: 'assigned')
+      .snapshots()
+      .map((snapshot) => snapshot.docs.length);
+}
+Stream<int> getDeliveringOrders(String driverId) {
+  return _firestore
+      .collection('orders')
+      .where('driverId', isEqualTo: driverId)
+      .where('status', isEqualTo: 'delivering')
+      .snapshots()
+      .map((e) => e.docs.length);
+}
+
+Stream<int> getPendingOrders(String driverId) {
+  return _firestore
+      .collection('orders')
+      .where('driverId', isEqualTo: driverId)
+      .where('status', isEqualTo: 'assigned')
+      .snapshots()
+      .map((e) => e.docs.length);
+}
 
   /// جميع المندوبين المتاحين
   Stream<List<DriverModel>> getDrivers() {
@@ -17,6 +50,7 @@ class DriverService {
           .map((doc) => DriverModel.fromFirestore(doc))
           .toList();
     });
+    
   }
 
   /// الحصول على Document ID الخاص بالمندوب
@@ -59,6 +93,14 @@ class DriverService {
     required String orderId,
     required String driverName,
   }) async {
+
+    final driverDoc =
+    await _firestore.collection('drivers').doc(driverId).get();
+
+    final driverData = driverDoc.data() ?? {};
+
+    final driverPhone = driverData['phone'] ?? '';
+
     final batch = _firestore.batch();
 
     final orderRef =
@@ -67,14 +109,16 @@ class DriverService {
     final driverRef =
         _firestore.collection('drivers').doc(driverId);
 
-    batch.update(orderRef, {
-      'driverId': driverId,
-      'driverName': driverName,
-      'status': 'assigned',
-    });
+   batch.update(orderRef, {
+  'driverId': driverId,
+  'driverName': driverName,
+  'driverPhone': driverPhone,
+  'status': 'assigned',
+});
 
     batch.update(driverRef, {
-      'currentOrderId': orderId,
+  'currentOrderId': orderId,
+  'assignedToday': FieldValue.increment(1),
     });
 
     await batch.commit();
@@ -87,22 +131,30 @@ class DriverService {
   final batch = _firestore.batch();
 
   // إنهاء الطلب
-  batch.update(
-    _firestore.collection('orders').doc(orderId),
-    {
-      'status': 'completed',
-    },
-  );
+ batch.update(
+  _firestore.collection('orders').doc(orderId),
+  {
+    'status': 'completed',
+    'completedAt': FieldValue.serverTimestamp(),
+  },
+);
 
   // تحرير المندوب
   batch.update(
-    _firestore.collection('drivers').doc(driverId),
-    {
-      'currentOrderId': '',
-    },
-  );
+  _firestore.collection('drivers').doc(driverId),
+  {
+    'currentOrderId': '',
+    'completedToday': FieldValue.increment(1),
+  },
+);
 
+  try {
+  print("COMMIT START");
   await batch.commit();
+  print("COMMIT DONE");
+} catch (e) {
+  print("COMMIT ERROR: $e");
+}
 
   // إعادة المندوب إلى نهاية الطابور
   await moveDriverToEnd(driverId);
@@ -125,7 +177,9 @@ class DriverService {
   }
 }
 
-Future<DriverModel?> getNextDriver() async {
+Future<DriverModel?> getNextDriver({
+  List<String> excludedDrivers = const [],
+}) async {
 
   final queueDoc = await _firestore
       .collection('system')
@@ -152,13 +206,46 @@ Future<DriverModel?> getNextDriver() async {
 
     final driver = DriverModel.fromFirestore(driverDoc);
 
+    print("CURRENT DRIVER ID = ${driver.id}");
+
+    if (excludedDrivers.contains(driver.id)) {
+  print("SKIPPING DRIVER: ${driver.name}");
+  continue;
+}
+
+print("========== DRIVER ==========");
+print("Name: ${driver.name}");
+print("Status: ${driver.status}");
+print("CurrentOrder: '${driver.currentOrderId}'");
+print("LastSeen: ${driver.lastSeen}");
+
     final currentOrder =
         driver.currentOrderId.trim();
 
-    if (driver.active &&
-        currentOrder.isEmpty) {
-      return driver;
-    }
+        final lastSeen = driver.lastSeen;
+
+if (lastSeen == null) {
+  continue;
+}
+
+final seconds =
+    DateTime.now()
+        .difference(lastSeen.toDate())
+        .inSeconds;
+
+print("Seconds: $seconds");
+print("CHECKING ${driver.name}");
+print("status = ${driver.status}");
+print("currentOrder = '$currentOrder'");
+print("seconds = $seconds");
+
+ if (driver.status == "online" &&
+    currentOrder.isEmpty &&
+    seconds <= 60) {
+      print("SELECTED DRIVER");
+  return driver;
+}
+
   }
 
   return null;
@@ -180,6 +267,19 @@ Future<void> moveDriverToEnd(String driverId) async {
 
   await ref.update({
     'drivers': drivers,
+  });
+}
+/// تحديث حالة اتصال المندوب
+Future<void> updateDriverStatus({
+  required String driverId,
+  required String status,
+}) async {
+  await _firestore
+      .collection('drivers')
+      .doc(driverId)
+      .update({
+    'status': status,
+    'lastSeen': FieldValue.serverTimestamp(),
   });
 }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../models/order_model.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 
 class RestaurantOrderCard extends StatelessWidget {
@@ -15,17 +16,30 @@ class RestaurantOrderCard extends StatelessWidget {
     this.onTap,
   });
 
-  Future<void> _callCustomer() async {
-  final Uri phone = Uri(
-    scheme: 'tel',
-    path: order.customerPhone,
-  );
+Future<void> _callCustomer() async {
+  final uri = Uri.parse("tel:${order.customerPhone}");
 
-  if (await canLaunchUrl(phone)) {
-    await launchUrl(phone);
-  }
+  await launchUrl(
+    uri,
+    mode: LaunchMode.externalApplication,
+  );
 }
 
+Future<void> _callDriver() async {
+  final uri = Uri.parse("tel:${order.driverPhone}");
+
+  await launchUrl(
+    uri,
+    mode: LaunchMode.externalApplication,
+  );
+}
+String formatDateTime(Timestamp? timestamp) {
+  if (timestamp == null) return "";
+
+  return DateFormat(
+  "dd/MM/yyyy • hh:mm a",
+).format(timestamp.toDate());
+}
   @override
   Widget build(BuildContext context) {
     Color statusColor;
@@ -174,20 +188,74 @@ Row(
               ),
               const SizedBox(height: 14),
 
+              Text(
+  "📅 إنشاء الطلب: ${formatDateTime(order.createdAt)}",
+  style: const TextStyle(
+    fontSize: 13,
+    color: Colors.grey,
+  ),
+),
+
+if (order.completedAt != null)
+  Text(
+    "✅ اكتمال الطلب: ${formatDateTime(order.completedAt)}",
+    style: const TextStyle(
+      fontSize: 13,
+      color: Colors.green,
+      fontWeight: FontWeight.bold,
+    ),
+  ),
+
+const SizedBox(height: 12),
+
+             if (order.driverName.isNotEmpty) ...[
+  Padding(
+    padding: const EdgeInsets.only(bottom: 10),
+    child: Row(
+  mainAxisAlignment: MainAxisAlignment.end,
+  children: [
+    Text(
+      order.driverName,
+      style: const TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+
+    const SizedBox(width: 6),
+
+    const Icon(
+      Icons.delivery_dining,
+      color: Color.fromARGB(255, 201, 25, 25),
+      size: 30,
+    ),
+  ],
+),
+  ),
+],
+
 Row(
   children: [
-
     Expanded(
       child: OutlinedButton.icon(
-       onPressed: _callCustomer,
-        icon: const Icon(Icons.call),
+        onPressed: _callCustomer,
+        icon: const Icon(Icons.person),
         label: const Text("اتصال بالزبون"),
       ),
     ),
 
+    const SizedBox(width: 10),
+
+    Expanded(
+      child: OutlinedButton.icon(
+        onPressed: _callDriver,
+        icon: const Icon(Icons.delivery_dining),
+        label: const Text("اتصال بالمندوب"),
+      ),
+      
+    ),
   ],
 ),
-
             ],
           ),
         ),
